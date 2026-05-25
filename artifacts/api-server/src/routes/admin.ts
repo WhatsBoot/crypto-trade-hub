@@ -228,3 +228,62 @@ router.delete("/transactions/clear", async (req: AuthRequest, res) => {
 });
 
 export default router;
+// ---- CRIAR USUÁRIO ----
+router.post("/users", async (req: AuthRequest, res) => {
+  try {
+    const { username, email, password, role = "user" } = req.body;
+    if (!username || !email || !password) {
+      res.status(400).json({ error: "username, email e password são obrigatórios" });
+      return;
+    }
+    const bcrypt = await import("bcrypt");
+    const passwordHash = await bcrypt.hash(password, 10);
+    const [user] = await db.insert(usersTable)
+      .values({ username, email, passwordHash, role })
+      .returning();
+    res.json({ id: user.id, username: user.username, email: user.email, role: user.role });
+  } catch (err: any) {
+    if (err?.code === "23505") {
+      res.status(409).json({ error: "Email ou username já existe" });
+      return;
+    }
+    req.log.error(err);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// ---- EDITAR USUÁRIO ----
+router.patch("/users/:userId", async (req: AuthRequest, res) => {
+  try {
+    const userId = parseInt(req.params.userId as string);
+    const { username, email, password, role } = req.body;
+    const updateData: Record<string, unknown> = {};
+    if (username) updateData.username = username;
+    if (email) updateData.email = email;
+    if (role) updateData.role = role;
+    if (password) {
+      const bcrypt = await import("bcrypt");
+      updateData.passwordHash = await bcrypt.hash(password, 10);
+    }
+    if (Object.keys(updateData).length === 0) {
+      res.status(400).json({ error: "Nenhum campo para atualizar" });
+      return;
+    }
+    const [updated] = await db.update(usersTable)
+      .set(updateData)
+      .where(eq(usersTable.id, userId))
+      .returning();
+    if (!updated) {
+      res.status(404).json({ error: "Usuário não encontrado" });
+      return;
+    }
+    res.json({ id: updated.id, username: updated.username, email: updated.email, role: updated.role });
+  } catch (err: any) {
+    if (err?.code === "23505") {
+      res.status(409).json({ error: "Email ou username já existe" });
+      return;
+    }
+    req.log.error(err);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});

@@ -19,7 +19,7 @@ import { formatCurrency, formatNumber, COINS_ORDERED } from "@/lib/utils";
 import { CoinLogo } from "@/components/CoinLogo";
 import { useToast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
-import { Users, ArrowUpRight, Settings as SettingsIcon, Activity, UserPlus, Pencil } from "lucide-react";
+import { Users, ArrowUpRight, Settings as SettingsIcon, Activity } from "lucide-react";
 
 export default function Admin() {
   const { data: stats } = useAdminGetStats();
@@ -210,153 +210,14 @@ function EditBalanceDialog({ user }: { user: any }) {
   );
 }
 
-function CreateUserDialog({ onSuccess }: { onSuccess: () => void }) {
-  const [isOpen, setIsOpen] = useState(false);
-  const [form, setForm] = useState({ username: "", email: "", password: "", role: "user" });
-  const [loading, setLoading] = useState(false);
-  const { toast } = useToast();
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    try {
-      const res = await fetch("/api/admin/users", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify(form),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Erro ao criar usuário");
-      toast({ title: "Usuário criado com sucesso!" });
-      setIsOpen(false);
-      setForm({ username: "", email: "", password: "", role: "user" });
-      onSuccess();
-    } catch (err: any) {
-      toast({ title: "Erro", description: err.message, variant: "destructive" });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogTrigger asChild>
-        <Button size="sm" className="flex gap-2"><UserPlus className="w-4 h-4"/> Criar Usuário</Button>
-      </DialogTrigger>
-      <DialogContent className="max-w-md">
-        <DialogHeader><DialogTitle>Criar Novo Usuário</DialogTitle></DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4 pt-2">
-          <div className="space-y-2">
-            <Label>Username</Label>
-            <Input value={form.username} onChange={e => setForm({...form, username: e.target.value})} required />
-          </div>
-          <div className="space-y-2">
-            <Label>Email</Label>
-            <Input type="email" value={form.email} onChange={e => setForm({...form, email: e.target.value})} required />
-          </div>
-          <div className="space-y-2">
-            <Label>Senha</Label>
-            <Input type="password" value={form.password} onChange={e => setForm({...form, password: e.target.value})} required />
-          </div>
-          <div className="space-y-2">
-            <Label>Role</Label>
-            <Select value={form.role} onValueChange={v => setForm({...form, role: v})}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="user">User</SelectItem>
-                <SelectItem value="admin">Admin</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          <Button type="submit" className="w-full" disabled={loading}>Criar</Button>
-        </form>
-      </DialogContent>
-    </Dialog>
-  );
-}
-
-function EditUserDialog({ user, onSuccess }: { user: any; onSuccess: () => void }) {
-  const [isOpen, setIsOpen] = useState(false);
-  const [form, setForm] = useState({ username: user.username, email: user.email, password: "", role: user.role });
-  const [loading, setLoading] = useState(false);
-  const { toast } = useToast();
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    try {
-      const body: any = { username: form.username, email: form.email, role: form.role };
-      if (form.password) body.password = form.password;
-      const res = await fetch(`/api/admin/users/${user.id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify(body),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Erro ao editar usuário");
-      toast({ title: "Usuário atualizado!" });
-      setIsOpen(false);
-      onSuccess();
-    } catch (err: any) {
-      toast({ title: "Erro", description: err.message, variant: "destructive" });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogTrigger asChild>
-        <Button variant="ghost" size="sm" className="flex gap-1"><Pencil className="w-3 h-3"/> Editar</Button>
-      </DialogTrigger>
-      <DialogContent className="max-w-md">
-        <DialogHeader><DialogTitle>Editar Usuário — {user.username}</DialogTitle></DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4 pt-2">
-          <div className="space-y-2">
-            <Label>Username</Label>
-            <Input value={form.username} onChange={e => setForm({...form, username: e.target.value})} required />
-          </div>
-          <div className="space-y-2">
-            <Label>Email</Label>
-            <Input type="email" value={form.email} onChange={e => setForm({...form, email: e.target.value})} required />
-          </div>
-          <div className="space-y-2">
-            <Label>Nova Senha (deixe em branco para manter)</Label>
-            <Input type="password" value={form.password} onChange={e => setForm({...form, password: e.target.value})} placeholder="••••••••" />
-          </div>
-          <div className="space-y-2">
-            <Label>Role</Label>
-            <Select value={form.role} onValueChange={v => setForm({...form, role: v})}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="user">User</SelectItem>
-                <SelectItem value="admin">Admin</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          <Button type="submit" className="w-full" disabled={loading}>Salvar</Button>
-        </form>
-      </DialogContent>
-    </Dialog>
-  );
-}
-
 function AdminUsers() {
   const { data: users } = useAdminGetUsers();
-  const queryClient = useQueryClient();
-
-  const refresh = () => queryClient.invalidateQueries({ queryKey: getAdminGetUsersQueryKey() });
 
   return (
     <Card>
-      <CardHeader className="flex flex-row items-center justify-between">
-        <div>
-          <CardTitle>User Management</CardTitle>
-          <CardDescription>View, create, and edit users and their balances.</CardDescription>
-        </div>
-        <CreateUserDialog onSuccess={refresh} />
+      <CardHeader>
+        <CardTitle>User Management</CardTitle>
+        <CardDescription>View users and modify their asset balances directly.</CardDescription>
       </CardHeader>
       <CardContent>
         <Table>
@@ -366,7 +227,7 @@ function AdminUsers() {
               <TableHead>Username / Email</TableHead>
               <TableHead>Total USDT Value</TableHead>
               <TableHead>Balances</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
+              <TableHead className="text-right">Action</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -386,10 +247,7 @@ function AdminUsers() {
                   </div>
                 </TableCell>
                 <TableCell className="text-right">
-                  <div className="flex justify-end gap-1">
-                    <EditUserDialog user={u} onSuccess={refresh} />
-                    <EditBalanceDialog user={u} />
-                  </div>
+                  <EditBalanceDialog user={u} />
                 </TableCell>
               </TableRow>
             ))}
@@ -523,8 +381,11 @@ function AdminSettings() {
               />
             </div>
             <div className="space-y-2">
-              <Label>Deposit Network</Label>
-              <div className="flex items-center gap-2 rounded-md border border-border bg-secondary/40 px-3 py-2 text-sm font-mono font-bold text-primary">TRC20</div>
+              <Label>Deposit Network (e.g. ERC20, TRC20)</Label>
+              <Input 
+                value={formData.network} 
+                onChange={e => setFormData({...formData, network: e.target.value})} 
+              />
             </div>
           </div>
 
