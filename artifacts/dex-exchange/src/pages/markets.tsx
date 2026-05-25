@@ -1,7 +1,8 @@
 import { useGetMarkets } from "@workspace/api-client-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { formatCurrency, formatNumber, getCoinAvatar, getCoinColor, cn } from "@/lib/utils";
+import { formatCurrency, formatNumber, cn } from "@/lib/utils";
+import { CoinLogo } from "@/components/CoinLogo";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ArrowUpRight, ArrowDownRight } from "lucide-react";
 import { Link } from "wouter";
@@ -46,9 +47,7 @@ export default function Markets() {
                   <TableRow key={m.symbol} className="border-border/50 hover:bg-secondary/50">
                     <TableCell>
                       <div className="flex items-center gap-3">
-                        <div className={cn("w-10 h-10 rounded-full flex items-center justify-center font-bold", getCoinColor(m.symbol))}>
-                          {getCoinAvatar(m.symbol)}
-                        </div>
+                        <CoinLogo symbol={m.symbol} size={40} />
                         <div>
                           <div className="font-bold text-base">{m.symbol}</div>
                           <div className="text-sm text-muted-foreground">{m.name}</div>

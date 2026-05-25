@@ -5,7 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { formatNumber, cn, getCoinColor, getCoinAvatar } from "@/lib/utils";
+import { formatNumber, cn, COINS_ORDERED } from "@/lib/utils";
+import { CoinLogo } from "@/components/CoinLogo";
 import { ArrowDown, Loader2, RefreshCw } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
@@ -25,11 +26,14 @@ export default function Swap() {
   const queryClient = useQueryClient();
 
   useEffect(() => {
-    if (amount && Number(amount) > 0 && fromCurrency && toCurrency && fromCurrency !== toCurrency) {
-      const timer = setTimeout(() => {
+    if (!(amount && Number(amount) > 0 && fromCurrency && toCurrency && fromCurrency !== toCurrency)) {
+      setQuote(null);
+      return;
+    }
+    const timer = setTimeout(() => {
         getQuoteMutation.mutate({
           data: {
-            fromCurrency,
+            fromCurrency: fromCurrency,
             toCurrency,
             amount: Number(amount)
           }
@@ -39,9 +43,6 @@ export default function Swap() {
         });
       }, 500);
       return () => clearTimeout(timer);
-    } else {
-      setQuote(null);
-    }
   }, [amount, fromCurrency, toCurrency]);
 
   const handleSwap = () => {
@@ -103,12 +104,22 @@ export default function Swap() {
                 className="text-2xl font-mono bg-transparent border-none shadow-none focus-visible:ring-0 px-0"
               />
               <Select value={fromCurrency} onValueChange={setFromCurrency}>
-                <SelectTrigger className="w-[120px] bg-background border-none shrink-0">
-                  <SelectValue placeholder="Token" />
+                <SelectTrigger className="w-[140px] bg-background border-none shrink-0">
+                  <SelectValue>
+                    <div className="flex items-center gap-2">
+                      <CoinLogo symbol={fromCurrency} size={20} />
+                      <span>{fromCurrency}</span>
+                    </div>
+                  </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
-                  {availableCurrencies.map(c => (
-                    <SelectItem key={c} value={c}>{c}</SelectItem>
+                  {COINS_ORDERED.map(c => (
+                    <SelectItem key={c} value={c}>
+                      <div className="flex items-center gap-2">
+                        <CoinLogo symbol={c} size={18} />
+                        <span>{c}</span>
+                      </div>
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -135,12 +146,22 @@ export default function Swap() {
                 className="text-2xl font-mono bg-transparent border-none shadow-none focus-visible:ring-0 px-0 text-foreground"
               />
               <Select value={toCurrency} onValueChange={setToCurrency}>
-                <SelectTrigger className="w-[120px] bg-background border-none shrink-0">
-                  <SelectValue placeholder="Token" />
+                <SelectTrigger className="w-[140px] bg-background border-none shrink-0">
+                  <SelectValue>
+                    <div className="flex items-center gap-2">
+                      <CoinLogo symbol={toCurrency} size={20} />
+                      <span>{toCurrency}</span>
+                    </div>
+                  </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
-                  {availableCurrencies.map(c => (
-                    <SelectItem key={c} value={c}>{c}</SelectItem>
+                  {COINS_ORDERED.map(c => (
+                    <SelectItem key={c} value={c}>
+                      <div className="flex items-center gap-2">
+                        <CoinLogo symbol={c} size={18} />
+                        <span>{c}</span>
+                      </div>
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>

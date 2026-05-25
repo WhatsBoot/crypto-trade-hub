@@ -5,7 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { formatCurrency, formatNumber, getCoinColor, getCoinAvatar, cn } from "@/lib/utils";
+import { formatCurrency, formatNumber, cn, COINS_ORDERED } from "@/lib/utils";
+import { CoinLogo } from "@/components/CoinLogo";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
@@ -28,20 +29,19 @@ export default function Wallet() {
   const queryClient = useQueryClient();
 
   useEffect(() => {
-    // Only check if we have amount and currency
-    if (amount && Number(amount) > 0 && currency) {
-      const timer = setTimeout(() => {
-        checkEligibility.mutate({
-          data: { currency, amount: Number(amount) }
-        }, {
-          onSuccess: (data) => setEligibility(data),
-          onError: () => setEligibility(null)
-        });
-      }, 500);
-      return () => clearTimeout(timer);
-    } else {
+    if (!(amount && Number(amount) > 0 && currency)) {
       setEligibility(null);
+      return;
     }
+    const timer = setTimeout(() => {
+      checkEligibility.mutate({
+        data: { currency, amount: Number(amount) }
+      }, {
+        onSuccess: (data) => setEligibility(data),
+        onError: () => setEligibility(null)
+      });
+    }, 500);
+    return () => clearTimeout(timer);
   }, [amount, currency]);
 
   const handleWithdraw = (e: React.FormEvent) => {
@@ -90,9 +90,7 @@ export default function Wallet() {
               ) : balances?.map(b => (
                 <div key={b.id} className="flex items-center justify-between p-3 rounded-lg bg-secondary/50 border border-border/50">
                   <div className="flex items-center gap-3">
-                    <div className={cn("w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm", getCoinColor(b.currency))}>
-                      {getCoinAvatar(b.currency)}
-                    </div>
+                    <CoinLogo symbol={b.currency} size={32} />
                     <span className="font-bold">{b.currency}</span>
                   </div>
                   <div className="text-right">
@@ -151,10 +149,14 @@ export default function Wallet() {
                         <SelectValue placeholder="Select asset" />
                       </SelectTrigger>
                       <SelectContent>
-                        {availableCurrencies.map(c => (
-                          <SelectItem key={c} value={c}>{c}</SelectItem>
+                        {COINS_ORDERED.map(c => (
+                          <SelectItem key={c} value={c}>
+                            <div className="flex items-center gap-2">
+                              <CoinLogo symbol={c} size={16} />
+                              <span>{c}</span>
+                            </div>
+                          </SelectItem>
                         ))}
-                        {availableCurrencies.length === 0 && <SelectItem value="USDT">USDT</SelectItem>}
                       </SelectContent>
                     </Select>
                   </div>

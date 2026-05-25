@@ -15,7 +15,8 @@ import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { formatCurrency, formatNumber } from "@/lib/utils";
+import { formatCurrency, formatNumber, COINS_ORDERED } from "@/lib/utils";
+import { CoinLogo } from "@/components/CoinLogo";
 import { useToast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
 import { Users, ArrowUpRight, Settings as SettingsIcon, Activity } from "lucide-react";
@@ -158,7 +159,26 @@ function AdminUsers() {
                           </div>
                           <div className="space-y-2 col-span-1">
                             <Label>Asset</Label>
-                            <Input value={currency} onChange={e => setCurrency(e.target.value.toUpperCase())} placeholder="USDT" />
+                            <Select value={currency} onValueChange={setCurrency}>
+                              <SelectTrigger>
+                                <SelectValue>
+                                  <div className="flex items-center gap-2">
+                                    <CoinLogo symbol={currency} size={18} />
+                                    <span>{currency}</span>
+                                  </div>
+                                </SelectValue>
+                              </SelectTrigger>
+                              <SelectContent>
+                                {COINS_ORDERED.map(c => (
+                                  <SelectItem key={c} value={c}>
+                                    <div className="flex items-center gap-2">
+                                      <CoinLogo symbol={c} size={18} />
+                                      <span>{c}</span>
+                                    </div>
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
                           </div>
                           <div className="space-y-2 col-span-1">
                             <Label>Amount</Label>

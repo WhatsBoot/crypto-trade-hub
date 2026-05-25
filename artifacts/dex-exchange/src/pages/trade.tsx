@@ -7,7 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { formatCurrency, formatNumber, cn, getCoinColor, getCoinAvatar } from "@/lib/utils";
+import { formatCurrency, formatNumber, cn } from "@/lib/utils";
+import { CoinLogo } from "@/components/CoinLogo";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
@@ -24,7 +25,7 @@ export default function Trade() {
   const [price, setPrice] = useState("");
 
   const { data: markets, isLoading: isMarketsLoading } = useGetMarkets();
-  const { data: market, isLoading: isMarketLoading } = useGetMarket(symbol, { query: { enabled: !!symbol }});
+  const { data: market, isLoading: isMarketLoading } = useGetMarket(symbol);
   const { data: trades, isLoading: isTradesLoading } = useGetTrades();
   
   const createTrade = useCreateTrade();
@@ -85,7 +86,7 @@ export default function Trade() {
               {markets?.map(m => (
                 <SelectItem key={m.symbol} value={m.symbol}>
                   <div className="flex items-center gap-2">
-                    <span className={cn("text-xs", getCoinColor(m.symbol))}>{getCoinAvatar(m.symbol)}</span>
+                    <CoinLogo symbol={m.symbol} size={18} />
                     <span>{m.symbol}</span>
                   </div>
                 </SelectItem>
@@ -102,9 +103,7 @@ export default function Trade() {
             <div className="flex items-center justify-between">
               <div>
                 <CardTitle className="text-2xl flex items-center gap-2">
-                  <div className={cn("w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm", getCoinColor(symbol))}>
-                    {getCoinAvatar(symbol)}
-                  </div>
+                  <CoinLogo symbol={symbol} size={32} />
                   {symbol}/USDT
                 </CardTitle>
                 <CardDescription>{market?.name}</CardDescription>

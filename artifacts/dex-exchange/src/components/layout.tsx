@@ -17,11 +17,7 @@ const NAV_ITEMS = [
 
 export function Layout({ children }: { children: React.ReactNode }) {
   const [location, setLocation] = useLocation();
-  const { data: user, isLoading, isError } = useGetMe({
-    query: {
-      retry: false,
-    }
-  });
+  const { data: user, isLoading, isError } = useGetMe();
   
   const logout = useLogout();
 
