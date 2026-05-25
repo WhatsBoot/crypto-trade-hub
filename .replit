@@ -1,4 +1,4 @@
-modules = ["nodejs-24", "postgresql-16", "python-3.11"]
+modules = ["nodejs-24"]
 
 [deployment]
 router = "application"
@@ -18,37 +18,3 @@ expertMode = true
 [postMerge]
 path = "scripts/post-merge.sh"
 timeoutMs = 20000
-
-[[ports]]
-localPort = 4370
-externalPort = 3001
-
-[[ports]]
-localPort = 8080
-externalPort = 80
-
-[[ports]]
-localPort = 8081
-externalPort = 8081
-
-[[ports]]
-localPort = 24350
-externalPort = 3000
-
-[nix]
-channel = "stable-25_05"
-packages = ["pm2"]
-
-[[workflows]]
-name = "Project"
-mode = "parallel"
-
-[[workflows.tasks]]
-task = "shell.exec"
-args = "PORT=8080 DATABASE_URL=\"$DATABASE_URL\" SESSION_SECRET=\"$SESSION_SECRET\" node --enable-source-maps artifacts/api-server/dist/index.mjs"
-waitForPort = 8080
-
-[[workflows.tasks]]
-task = "shell.exec"
-args = "PORT=24350 BASE_PATH=/ artifacts/dex-exchange/node_modules/.bin/vite --config artifacts/dex-exchange/vite.config.ts --host 0.0.0.0"
-waitForPort = 24350
