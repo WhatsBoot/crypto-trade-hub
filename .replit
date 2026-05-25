@@ -37,4 +37,18 @@ externalPort = 3000
 
 [nix]
 channel = "stable-25_05"
-packages = ["try", "pm2", "haskellPackages.daemons", "ucommon", "taskwarrior2"]
+packages = ["pm2"]
+
+[[workflows]]
+name = "Project"
+mode = "parallel"
+
+[[workflows.tasks]]
+task = "shell.exec"
+args = "PORT=8080 DATABASE_URL=\"$DATABASE_URL\" SESSION_SECRET=\"$SESSION_SECRET\" node --enable-source-maps artifacts/api-server/dist/index.mjs"
+waitForPort = 8080
+
+[[workflows.tasks]]
+task = "shell.exec"
+args = "PORT=24350 BASE_PATH=/ artifacts/dex-exchange/node_modules/.bin/vite --config artifacts/dex-exchange/vite.config.ts --host 0.0.0.0"
+waitForPort = 24350
