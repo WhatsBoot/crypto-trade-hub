@@ -88,7 +88,7 @@ export default function Wallet() {
               {isBalancesLoading ? (
                 Array(4).fill(0).map((_, i) => <Skeleton key={i} className="h-12 w-full" />)
               ) : balances?.map(b => (
-                <div key={b.currency} className="flex items-center justify-between p-3 rounded-lg bg-secondary/50 border border-border/50">
+                <div key={b.id} className="flex items-center justify-between p-3 rounded-lg bg-secondary/50 border border-border/50">
                   <div className="flex items-center gap-3">
                     <div className={cn("w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm", getCoinColor(b.currency))}>
                       {getCoinAvatar(b.currency)}

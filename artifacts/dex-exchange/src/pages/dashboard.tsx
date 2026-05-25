@@ -51,7 +51,7 @@ export default function Dashboard() {
               Array(3).fill(0).map((_, i) => <Skeleton key={i} className="h-10 w-full" />)
             ) : (
               portfolio?.balances.slice(0, 3).map(b => (
-                <div key={b.currency} className="flex items-center justify-between">
+                <div key={b.id} className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <div className={cn("w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm", getCoinColor(b.currency))}>
                       {getCoinAvatar(b.currency)}

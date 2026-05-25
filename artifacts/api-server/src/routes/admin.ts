@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { db } from "@workspace/db";
-import { usersTable, balancesTable, withdrawalsTable, adminSettingsTable, transactionsTable } from "@workspace/db";
+import { usersTable, balancesTable, withdrawalsTable, adminSettingsTable, transactionsTable, tradesTable, swapsTable } from "@workspace/db";
 import { eq, and, count, sum } from "drizzle-orm";
 import type { AuthRequest } from "../middlewares/auth";
 import { requireAuth, requireAdmin } from "../middlewares/auth";
@@ -200,14 +200,15 @@ router.get("/stats", async (req: AuthRequest, res) => {
   try {
     const [{ totalUsers }] = await db.select({ totalUsers: count() }).from(usersTable);
     const [{ pendingWithdrawals }] = await db.select({ pendingWithdrawals: count() }).from(withdrawalsTable).where(eq(withdrawalsTable.status, "pending"));
-    const [{ totalTrades }] = await db.select({ totalTrades: count() }).from(db.$with("t").as(db.select().from(withdrawalsTable)));
+    const [{ totalTrades }] = await db.select({ totalTrades: count() }).from(tradesTable);
+    const [{ totalSwaps }] = await db.select({ totalSwaps: count() }).from(swapsTable);
     res.json({
       totalUsers,
       totalVolume: 4_820_000,
       pendingWithdrawals,
       totalDeposited: 1_250_000,
-      totalTrades: totalTrades ?? 0,
-      totalSwaps: 0,
+      totalTrades,
+      totalSwaps,
     });
   } catch (err) {
     req.log.error(err);
