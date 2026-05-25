@@ -216,15 +216,4 @@ router.get("/stats", async (req: AuthRequest, res) => {
   }
 });
 
-
-router.delete("/transactions/clear", async (req: AuthRequest, res) => {
-  try {
-    await db.delete(transactionsTable);
-    res.json({ success: true, message: "All transactions cleared" });
-  } catch (err) {
-    req.log.error(err);
-    res.status(500).json({ error: "Internal server error" });
-  }
-});
-
 export default router;

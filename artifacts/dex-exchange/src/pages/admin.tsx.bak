@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { 
   useAdminGetUsers, useAdminUpdateBalance, 
   useAdminGetWithdrawals, useAdminUpdateWithdrawal,
@@ -334,7 +334,7 @@ function AdminSettings() {
   });
 
   // Initialize form when data loads
-  useEffect(() => {
+  useState(() => {
     if (settings) {
       setFormData({
         withdrawalThresholdPercent: settings.withdrawalThresholdPercent,
@@ -343,7 +343,7 @@ function AdminSettings() {
         network: settings.network
       });
     }
-  }, [settings]);
+  });
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
