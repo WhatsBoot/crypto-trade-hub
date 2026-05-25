@@ -4,7 +4,6 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { setAuthTokenGetter } from "@workspace/api-client-react";
 import { getToken } from "@/lib/auth";
-
 import NotFound from "@/pages/not-found";
 import Dashboard from "@/pages/dashboard";
 import Markets from "@/pages/markets";
@@ -22,7 +21,6 @@ setAuthTokenGetter(getToken);
 const queryClient = new QueryClient();
 
 function ProtectedRoute({ component: Component, adminOnly = false }: { component: any, adminOnly?: boolean }) {
-  // We'll handle auth checking at the Layout level for simplicity
   return <Component />;
 }
 
@@ -53,17 +51,18 @@ function Router() {
       <Route path="/admin">
         <Layout><Admin /></Layout>
       </Route>
-
       <Route component={NotFound} />
     </Switch>
   );
 }
 
 function App() {
+  const base = (import.meta.env.BASE_URL || "/").replace(/\/$/, "") || "/";
+
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
-        <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
+        <WouterRouter base={base}>
           <Router />
         </WouterRouter>
         <Toaster />
