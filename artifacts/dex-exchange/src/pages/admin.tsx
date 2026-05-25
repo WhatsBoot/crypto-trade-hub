@@ -64,40 +64,154 @@ export default function Admin() {
   );
 }
 
-function AdminUsers() {
-  const { data: users } = useAdminGetUsers();
+function EditBalanceDialog({ user }: { user: any }) {
   const updateBalance = useAdminUpdateBalance();
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  const [selectedUser, setSelectedUser] = useState<any>(null);
   const [currency, setCurrency] = useState("USDT");
   const [amount, setAmount] = useState("");
   const [operation, setOperation] = useState<"add" | "set" | "subtract">("add");
   const [isOpen, setIsOpen] = useState(false);
 
-  const handleUpdateBalance = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!selectedUser) return;
+  const currentBalance = user.balances?.find((b: any) => b.currency === currency);
+  const currentAmount = currentBalance ? Number(currentBalance.amount) : 0;
 
+  const previewResult = () => {
+    const n = Number(amount);
+    if (!amount || isNaN(n)) return null;
+    if (operation === "add") return currentAmount + n;
+    if (operation === "subtract") return Math.max(0, currentAmount - n);
+    if (operation === "set") return n;
+    return null;
+  };
+  const preview = previewResult();
+
+  const handleOpen = (open: boolean) => {
+    setIsOpen(open);
+    if (open) {
+      setAmount("");
+      setOperation("add");
+    }
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
     updateBalance.mutate({
-      userId: selectedUser.id,
-      data: {
-        currency,
-        amount: Number(amount),
-        operation
-      }
+      userId: user.id,
+      data: { currency, amount: Number(amount), operation }
     }, {
       onSuccess: () => {
-        toast({ title: "Balance updated" });
+        toast({ title: "Saldo atualizado com sucesso" });
         setIsOpen(false);
         queryClient.invalidateQueries({ queryKey: getAdminGetUsersQueryKey() });
       },
       onError: (err: any) => {
-        toast({ title: "Error updating balance", description: err.message, variant: "destructive" });
+        toast({ title: "Erro ao atualizar saldo", description: err.message, variant: "destructive" });
       }
     });
   };
+
+  return (
+    <Dialog open={isOpen} onOpenChange={handleOpen}>
+      <DialogTrigger asChild>
+        <Button variant="outline" size="sm">Edit Balances</Button>
+      </DialogTrigger>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle>Edit Balance — {user.username}</DialogTitle>
+        </DialogHeader>
+        <form onSubmit={handleSubmit} className="space-y-5 pt-2">
+
+          {/* Asset selector */}
+          <div className="space-y-2">
+            <Label>Asset</Label>
+            <Select value={currency} onValueChange={(v) => { setCurrency(v); setAmount(""); }}>
+              <SelectTrigger>
+                <SelectValue>
+                  <div className="flex items-center gap-2">
+                    <CoinLogo symbol={currency} size={18} />
+                    <span>{currency}</span>
+                  </div>
+                </SelectValue>
+              </SelectTrigger>
+              <SelectContent>
+                {COINS_ORDERED.map(c => (
+                  <SelectItem key={c} value={c}>
+                    <div className="flex items-center gap-2">
+                      <CoinLogo symbol={c} size={18} />
+                      <span>{c}</span>
+                    </div>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Current balance display */}
+          <div className="rounded-lg bg-secondary/60 border border-border/50 px-4 py-3 flex items-center justify-between">
+            <span className="text-sm text-muted-foreground">Saldo atual</span>
+            <span className="font-mono font-bold text-lg">{formatNumber(currentAmount)} <span className="text-muted-foreground text-sm">{currency}</span></span>
+          </div>
+
+          {/* Operation buttons */}
+          <div className="space-y-2">
+            <Label>Operação</Label>
+            <div className="grid grid-cols-3 gap-2">
+              {([
+                { value: "add", label: "Adicionar", color: "text-green-400 border-green-500/40 data-[active=true]:bg-green-500/20 data-[active=true]:border-green-500" },
+                { value: "subtract", label: "Remover", color: "text-red-400 border-red-500/40 data-[active=true]:bg-red-500/20 data-[active=true]:border-red-500" },
+                { value: "set", label: "Definir", color: "text-primary border-primary/40 data-[active=true]:bg-primary/20 data-[active=true]:border-primary" },
+              ] as const).map(op => (
+                <button
+                  key={op.value}
+                  type="button"
+                  data-active={operation === op.value}
+                  onClick={() => setOperation(op.value)}
+                  className={`rounded-lg border px-3 py-2 text-sm font-medium transition-colors ${op.color}`}
+                >
+                  {op.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Amount input */}
+          <div className="space-y-2">
+            <Label>
+              {operation === "add" ? "Quanto adicionar" : operation === "subtract" ? "Quanto remover" : "Novo saldo"}
+            </Label>
+            <Input
+              type="number"
+              step="any"
+              min="0"
+              placeholder="0.00"
+              value={amount}
+              onChange={e => setAmount(e.target.value)}
+              className="font-mono text-lg"
+              required
+            />
+          </div>
+
+          {/* Preview */}
+          {preview !== null && (
+            <div className="rounded-lg bg-primary/10 border border-primary/30 px-4 py-3 flex items-center justify-between">
+              <span className="text-sm text-muted-foreground">Saldo após mudança</span>
+              <span className="font-mono font-bold text-lg text-primary">{formatNumber(preview)} <span className="text-muted-foreground text-sm">{currency}</span></span>
+            </div>
+          )}
+
+          <Button type="submit" className="w-full" disabled={updateBalance.isPending}>
+            Salvar alterações
+          </Button>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function AdminUsers() {
+  const { data: users } = useAdminGetUsers();
 
   return (
     <Card>
@@ -133,62 +247,7 @@ function AdminUsers() {
                   </div>
                 </TableCell>
                 <TableCell className="text-right">
-                  <Dialog open={isOpen && selectedUser?.id === u.id} onOpenChange={(open) => {
-                    if(open) setSelectedUser(u);
-                    setIsOpen(open);
-                  }}>
-                    <DialogTrigger asChild>
-                      <Button variant="outline" size="sm">Edit Balances</Button>
-                    </DialogTrigger>
-                    <DialogContent>
-                      <DialogHeader>
-                        <DialogTitle>Edit Balance for {u.username}</DialogTitle>
-                      </DialogHeader>
-                      <form onSubmit={handleUpdateBalance} className="space-y-4 pt-4">
-                        <div className="grid grid-cols-3 gap-4">
-                          <div className="space-y-2 col-span-1">
-                            <Label>Operation</Label>
-                            <Select value={operation} onValueChange={(v: any) => setOperation(v)}>
-                              <SelectTrigger><SelectValue/></SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="add">Add (+)</SelectItem>
-                                <SelectItem value="subtract">Subtract (-)</SelectItem>
-                                <SelectItem value="set">Set (=)</SelectItem>
-                              </SelectContent>
-                            </Select>
-                          </div>
-                          <div className="space-y-2 col-span-1">
-                            <Label>Asset</Label>
-                            <Select value={currency} onValueChange={setCurrency}>
-                              <SelectTrigger>
-                                <SelectValue>
-                                  <div className="flex items-center gap-2">
-                                    <CoinLogo symbol={currency} size={18} />
-                                    <span>{currency}</span>
-                                  </div>
-                                </SelectValue>
-                              </SelectTrigger>
-                              <SelectContent>
-                                {COINS_ORDERED.map(c => (
-                                  <SelectItem key={c} value={c}>
-                                    <div className="flex items-center gap-2">
-                                      <CoinLogo symbol={c} size={18} />
-                                      <span>{c}</span>
-                                    </div>
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                          </div>
-                          <div className="space-y-2 col-span-1">
-                            <Label>Amount</Label>
-                            <Input type="number" step="any" value={amount} onChange={e => setAmount(e.target.value)} required />
-                          </div>
-                        </div>
-                        <Button type="submit" className="w-full" disabled={updateBalance.isPending}>Save Changes</Button>
-                      </form>
-                    </DialogContent>
-                  </Dialog>
+                  <EditBalanceDialog user={u} />
                 </TableCell>
               </TableRow>
             ))}
